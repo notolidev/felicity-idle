@@ -1,11 +1,9 @@
-User table - id + username
+Player table - user_id + username + password_hash
 
-Player skills table - id + combat_level + farming_level + mining_level - Potentially change level to XP, and have a total XP number and the convert from XP to level + XP or add skill_xp as well
+Player skills table - user_id + skill_type + xp
 
-Player stats table - id + health + strength + defense
+Player collection table - user_id + item_type + amount
 
-Player collection table - id + item_1_amount_collected + item_2_amount_collected...
+Player economy table - user_id + coins_stored_in_purse + coins_stored_in_bank
 
-Player economy table - id + coins_stored_in_purse + coins_stored_in_bank
-
-Player minion table - id + max_minions_allowed + minions_placed + list_of_minions_placed (id)
+Player minion table - user_id + minion_type + tier + last_collected_at
