@@ -1,6 +1,7 @@
 import express from "express";
 import { hashPassword } from "../auth/hashPassword";
-import { insertPlayer } from "../db";
+import { verifyPassword } from "../auth/verifyPassword";
+import { getPlayer, insertPlayer } from "../db";
 import { signToken } from "../auth/signToken";
 import { maxUsernameLength } from "../db/schema";
 
@@ -30,11 +31,32 @@ router.post("/signup", async (req: express.Request, res: express.Response) => {
         } else if (Number(err.cause.code) === 22001) {
             res.send(`Your username is over ${maxUsernameLength} characters!`);
         } else {
-            res.send(err.cause);
+            console.log(err.cause);
         }
     }
 });
 
-router.post("/signin", (req: express.Request, res: express.Response) => {});
+router.post("/signin", async (req: express.Request, res: express.Response) => {
+    try {
+        const player: any = await getPlayer(req.body.username);
+
+        if (
+            (await verifyPassword(
+                player.hashed_password,
+                req.body.password,
+            )) === true
+        ) {
+            const token: any = signToken(player.player_id);
+
+            res.cookie("auth_cookie", token, {
+                httpOnly: true,
+                secure: true,
+                sameSite: "strict",
+            });
+        }
+    } catch (err: any) {
+        console.log(err.cause);
+    }
+});
 
 export { router };
