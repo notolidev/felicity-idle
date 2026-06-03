@@ -1,5 +1,4 @@
 import {
-    bigint,
     doublePrecision,
     integer,
     pgTable,
@@ -12,7 +11,6 @@ export const maxUsernameLength: number = 20;
 export const passwordCriteria = {
     minimumLength: 8,
     mustHaveCapitalLetter: true,
-    mustHaveSymbol: false,
     mustHaveNumber: false,
 };
 

@@ -17,6 +17,33 @@ export default function App() {
         }
 
         if (passwordCriteria.mustHaveCapitalLetter === true) {
+            let hasCapitalLetter: boolean = false;
+
+            for (let i = 0; i < password.length; i++) {
+                if (password[i] === password[i].toUpperCase()) {
+                    hasCapitalLetter = true;
+                    break;
+                }
+            }
+
+            if (!hasCapitalLetter) {
+                return "Your password must contain a capital letter.";
+            }
+        }
+
+        if (passwordCriteria.mustHaveNumber === true) {
+            let hasNumber: boolean = false;
+
+            for (let i = 0; i < password.length; i++) {
+                if (!Number.isNaN(password[i])) {
+                    hasNumber = true;
+                    break;
+                }
+            }
+
+            if (!hasNumber) {
+                return "Your password must contain a number.";
+            }
         }
 
         return "200";
