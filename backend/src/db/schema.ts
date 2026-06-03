@@ -8,9 +8,17 @@ import {
     varchar,
 } from "drizzle-orm/pg-core";
 
+export const maxUsernameLength: number = 20;
+export const passwordCriteria = {
+    minimumLength: 8,
+    mustHaveCapitalLetter: true,
+    mustHaveSymbol: false,
+    mustHaveNumber: false,
+};
+
 export const players = pgTable("players", {
     player_id: integer().primaryKey().generatedAlwaysAsIdentity(),
-    username: varchar({ length: 20 }).notNull().unique(),
+    username: varchar({ length: maxUsernameLength }).notNull().unique(),
     password_hash: text().notNull(),
 });
 

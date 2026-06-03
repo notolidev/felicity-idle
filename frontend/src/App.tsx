@@ -1,5 +1,6 @@
 "use client";
 
+import { passwordCriteria } from "../../backend/src/db/schema";
 import { useState } from "react";
 import axios from "axios";
 import "./app.css";
@@ -8,30 +9,59 @@ export default function App() {
     const [form, setForm] = useState("signIn");
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [message, setMessage] = useState("Sign Up");
+
+    function checkPassword(password: string): string {
+        if (password.length < passwordCriteria.minimumLength) {
+            return `Your password must be at least ${passwordCriteria.minimumLength} characters.`;
+        }
+
+        if (passwordCriteria.mustHaveCapitalLetter === true) {
+        }
+
+        return "200";
+    }
 
     async function detectSubmit() {
-        if (form === "signIn") {
-            axios({
-                method: "POST",
-                url: "//localhost:3000/api/signin",
-                data: {
-                    username: username,
-                    password: password,
-                },
-            });
-            setUsername("");
-            setPassword("");
-        } else if (form === "signUp") {
-            axios({
-                method: "POST",
-                url: "//localhost:3000/api/signup",
-                data: {
-                    username: username,
-                    password: password,
-                },
-            });
-            setUsername("");
-            setPassword("");
+        if (!username || !password) {
+            setMessage("Please fill out all fields.");
+            return;
+        }
+
+        const checkPasswordValue: string = checkPassword(password);
+
+        if (checkPasswordValue === "200") {
+            if (form === "signIn") {
+                axios({
+                    method: "POST",
+                    url: "//localhost:3000/api/signin",
+                    data: {
+                        username: username,
+                        password: password,
+                    },
+                });
+                setUsername("");
+                setPassword("");
+            } else if (form === "signUp") {
+                axios({
+                    method: "POST",
+                    url: "//localhost:3000/api/signup",
+                    data: {
+                        username: username,
+                        password: password,
+                    },
+                })
+                    .then((res) => {
+                        setMessage(res.data);
+                        setUsername("");
+                        setPassword("");
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                    });
+            }
+        } else {
+            setMessage(checkPasswordValue);
         }
     }
 
@@ -85,7 +115,7 @@ export default function App() {
             ) : form == "signUp" ? (
                 /* Sign Up */
                 <div className="auth-card">
-                    <h2>Sign Up</h2>
+                    <h2>{message}</h2>
                     <label>
                         Username
                         <input
