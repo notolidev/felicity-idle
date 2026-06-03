@@ -39,7 +39,7 @@ export default function App() {
             if (form === "signIn") {
                 axios({
                     method: "POST",
-                    url: "//localhost:3000/api/signin",
+                    url: "//localhost:3000/auth/signin",
                     data: {
                         username: username,
                         password: password,
@@ -50,7 +50,7 @@ export default function App() {
             } else if (form === "signUp") {
                 axios({
                     method: "POST",
-                    url: "//localhost:3000/api/signup",
+                    url: "//localhost:3000/auth/signup",
                     data: {
                         username: username,
                         password: password,

@@ -1,8 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import * as schemaTables from "./schema";
-import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-import argon2 from "argon2";
 import "dotenv/config";
 
 dotenv.config({ path: "./backend/.env", quiet: true });
@@ -10,15 +8,7 @@ dotenv.config({ path: "./backend/.env", quiet: true });
 const db = drizzle(process.env.DATABASE_URL!);
 const tables = schemaTables;
 
-export async function insertPlayer(username: string, password: string) {
-    let hashed_password;
-
-    try {
-        hashed_password = await argon2.hash(password);
-    } catch (err) {
-        throw err;
-    }
-
+export async function insertPlayer(username: string, hashed_password: string) {
     try {
         return await db
             .insert(tables.players)
@@ -28,15 +18,7 @@ export async function insertPlayer(username: string, password: string) {
             })
             .returning({ player_id: tables.players.player_id })
             .then((e) => {
-                const token: string = jwt.sign(
-                    {
-                        player_id: e[0].player_id,
-                    },
-                    process.env.JWT_SECRET_KEY!,
-                    { expiresIn: "15m", algorithm: "HS256" },
-                );
-
-                return token;
+                return e[0].player_id;
             });
     } catch (err) {
         throw err;
