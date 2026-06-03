@@ -5,6 +5,8 @@ import { useState } from "react";
 import axios from "axios";
 import "./app.css";
 
+axios.defaults.withCredentials = true;
+
 export default function App() {
     const [form, setForm] = useState("signIn");
     const [username, setUsername] = useState("");
@@ -44,9 +46,15 @@ export default function App() {
                         username: username,
                         password: password,
                     },
-                });
-                setUsername("");
-                setPassword("");
+                })
+                    .then((res) => {
+                        setMessage(res.data);
+                        setUsername("");
+                        setPassword("");
+                    })
+                    .catch((err) => {
+                        console.log(err);
+                    });
             } else if (form === "signUp") {
                 axios({
                     method: "POST",
