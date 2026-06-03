@@ -1,18 +1,22 @@
 "use client";
 
-import { passwordCriteria } from "../../backend/src/db/schema";
-import { useState } from "react";
+// import { passwordCriteria } from "../../backend/src/db/schema";
+// import { useState } from "react";
 import axios from "axios";
+// import SignIn from "./components/auth/SignIn";
+// import SignUp from "./components/auth/SignUp";
+import Dashboard from "./components/dashboard/Dashboard";
 import "./app.css";
 
 axios.defaults.withCredentials = true;
 
 export default function App() {
-    const [form, setForm] = useState("signIn");
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
-    const [message, setMessage] = useState("Sign Up");
+    // const [form, setForm] = useState("signIn");
+    // const [username, setUsername] = useState("");
+    // const [password, setPassword] = useState("");
+    // const [message, setMessage] = useState("Sign Up");
 
+    /*
     function checkPassword(password: string): string {
         if (password.length < passwordCriteria.minimumLength) {
             return `Your password must be at least ${passwordCriteria.minimumLength} characters.`;
@@ -77,7 +81,11 @@ export default function App() {
             setMessage(checkPasswordValue);
         }
     }
+    */
 
+    return <Dashboard />;
+
+    /*
     return (
         <div className="auth-container">
             <button
@@ -92,77 +100,26 @@ export default function App() {
                 Change form
             </button>
             {form == "signIn" ? (
-                /* Sign In */
-                <div className="auth-card">
-                    <h2>Sign In</h2>
-                    <label>
-                        Username
-                        <input
-                            type="text"
-                            placeholder="Username"
-                            value={username}
-                            onChange={(
-                                e: React.ChangeEvent<HTMLInputElement>,
-                            ) => {
-                                setUsername(e.target.value);
-                            }}
-                        />
-                    </label>
-                    <label>
-                        Password
-                        <input
-                            type="password"
-                            placeholder="Password"
-                            value={password}
-                            onChange={(
-                                e: React.ChangeEvent<HTMLInputElement>,
-                            ) => {
-                                setPassword(e.target.value);
-                            }}
-                        />
-                    </label>
-                    <button type="button" onClick={detectSubmit}>
-                        Sign In
-                    </button>
-                </div>
+                <SignIn
+                    username={username}
+                    password={password}
+                    setUsername={setUsername}
+                    setPassword={setPassword}
+                    onSubmit={detectSubmit}
+                />
             ) : form == "signUp" ? (
-                /* Sign Up */
-                <div className="auth-card">
-                    <h2>{message}</h2>
-                    <label>
-                        Username
-                        <input
-                            type="text"
-                            placeholder="Username"
-                            value={username}
-                            onChange={(
-                                e: React.ChangeEvent<HTMLInputElement>,
-                            ) => {
-                                setUsername(e.target.value);
-                            }}
-                        />
-                    </label>
-                    <label>
-                        Password
-                        <input
-                            type="password"
-                            placeholder="Password"
-                            value={password}
-                            onChange={(
-                                e: React.ChangeEvent<HTMLInputElement>,
-                            ) => {
-                                setPassword(e.target.value);
-                            }}
-                        />
-                    </label>
-                    <button type="button" onClick={detectSubmit}>
-                        Sign Up
-                    </button>
-                </div>
+                <SignUp
+                    message={message}
+                    username={username}
+                    password={password}
+                    setUsername={setUsername}
+                    setPassword={setPassword}
+                    onSubmit={detectSubmit}
+                />
             ) : (
-                /* All goes wrong */
                 <h1>Wrong!</h1>
             )}
         </div>
     );
+    */
 }
