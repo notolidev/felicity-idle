@@ -60,8 +60,10 @@ export default function App() {
         if (buttonType === "signout") {
             axios({ method: "GET", url: "//localhost:3000/auth/signout" }).then(
                 (res: any) => {
-                    if (res.data === 200) {
+                    console.log(res.data);
+                    if (res.data === "OK") {
                         setIsAuthenticated(false);
+                        navigate("/");
                     }
                 },
             );
@@ -92,6 +94,9 @@ export default function App() {
                         setMessage(res.data);
                         setUsername("");
                         setPassword("");
+                        setIsAuthenticated(true);
+
+                        navigate("/");
                     })
                     .catch((err) => {
                         console.log(err);
@@ -109,6 +114,8 @@ export default function App() {
                         setMessage(res.data);
                         setUsername("");
                         setPassword("");
+
+                        navigate("/");
                     })
                     .catch((err) => {
                         console.log(err);
