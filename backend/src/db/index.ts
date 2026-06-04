@@ -71,3 +71,18 @@ export async function getSession(hashedRefreshToken: string) {
         throw err;
     }
 }
+
+export async function deleteSession(hashedRefreshToken: string) {
+    try {
+        return await db
+            .delete(tables.player_sessions)
+            .where(
+                eq(
+                    tables.player_sessions.refresh_token_hash,
+                    hashedRefreshToken,
+                ),
+            );
+    } catch (err: any) {
+        throw err;
+    }
+}

@@ -1,7 +1,7 @@
 import express from "express";
 import { hashPassword } from "../auth_helpers/password/hashPassword";
 import { verifyPassword } from "../auth_helpers/password/verifyPassword";
-import { getPlayer, insertPlayer, insertSession } from "../db";
+import { deleteSession, getPlayer, insertPlayer, insertSession } from "../db";
 import { signToken } from "../auth_helpers/access/signAccessToken";
 import { maxUsernameLength } from "../db/schema";
 import { verifyAccessToken } from "../auth_helpers/access/verifyAccessToken";
@@ -98,6 +98,25 @@ router.post("/signin", async (req: express.Request, res: express.Response) => {
         }
     } catch (err: any) {
         console.log(err.cause);
+    }
+});
+
+router.get("/signout", (req: express.Request, res: express.Response) => {
+    if (!req.cookies.accessCookie || !req.cookies.refreshCookie) {
+        res.status(401).send("Not logged in");
+        return;
+    } else {
+        try {
+            const player: any = verifyAccessToken(req.cookies.accessCookie);
+            const deletedPlayer: any = deleteSession(player.player_id);
+
+            res.clearCookie("accessCookie");
+            res.clearCookie("refreshCookie");
+
+            res.status(200).send(200);
+        } catch (err: any) {
+            res.send("Error");
+        }
     }
 });
 
