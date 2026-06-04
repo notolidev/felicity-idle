@@ -1,4 +1,5 @@
-type Range<T = number> = [min: T, max: T];
+import type { Range, Stats } from "../types";
+import { randomIntInRange } from "../utils/randomIntInRage";
 
 export class Enemy {
     private maxHealth: number;
@@ -11,17 +12,13 @@ export class Enemy {
         damageRange: Range<number>,
         coinsHeldRange: Range<number>,
     ) {
-        this.health = this.randomIntInRange(healthRange);
+        this.health = randomIntInRange(healthRange);
         this.maxHealth = this.health;
         this.damageRange = damageRange;
-        this.coinsHeld = this.randomIntInRange(coinsHeldRange);
+        this.coinsHeld = randomIntInRange(coinsHeldRange);
     }
 
-    private randomIntInRange(range: Range<number>) {
-        return Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
-    }
-
-    public getStats() {
+    public getStats(): Stats {
         return {
             health: this.maxHealth,
             damageRange: this.damageRange,
@@ -29,7 +26,7 @@ export class Enemy {
         };
     }
 
-    public takeDamage(damageAmount: number) {
+    public takeDamage(damageAmount: number): void {
         this.health -= damageAmount;
 
         if (this.health <= 0) {
