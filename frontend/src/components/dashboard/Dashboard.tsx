@@ -1,7 +1,8 @@
-import ActivityCard from "./cards/ActivityCard";
-import SkillCard from "./cards/SkillCard";
-import CoinsDisplay from "./cards/CoinsDisplay";
 import { CombatIcon, FarmingIcon, MiningIcon } from "../icons/icons";
+import ActivityCard from "./cards/ActivityCard";
+import CoinsDisplay from "./cards/CoinsDisplay";
+import combat from "../../lib/skills/combat";
+import SkillCard from "./cards/SkillCard";
 import "./dashboard.css";
 
 interface DashboardTypes {
@@ -24,7 +25,9 @@ const activities = [
         description: "Fight monsters to earn Combat XP and loot.",
         actionLabel: "Fight",
         accent: "#c0392b",
-        onAction: () => {},
+        onAction: () => {
+            combat;
+        },
     },
     {
         icon: <FarmingIcon />,
