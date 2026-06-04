@@ -1,7 +1,7 @@
 import { passwordCriteria } from "../../backend/src/db/schema";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { BrowserRouter, Routes, Route } from "react-router";
+import { Routes, Route, useNavigate } from "react-router";
 import AuthLayout from "./components/auth/AuthLayout";
 import SignIn from "./components/auth/SignIn";
 import SignUp from "./components/auth/SignUp";
@@ -15,6 +15,8 @@ export default function App() {
     const [password, setPassword] = useState("");
     const [message, setMessage] = useState("Sign Up");
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    let navigate = useNavigate();
+
     useEffect(() => {
         axios({
             method: "GET",
@@ -22,7 +24,17 @@ export default function App() {
         }).then((res) => {
             if (res.status === 200) {
                 setIsAuthenticated(true);
-            } else {
+            } else if (res.status === 401) {
+                axios({
+                    method: "GET",
+                    url: "//localhost:3000/auth/refresh",
+                }).then((res2) => {
+                    if (res2.status === 200) {
+                        setIsAuthenticated(true);
+                    } else {
+                        setIsAuthenticated(false);
+                    }
+                });
                 setIsAuthenticated(false);
             }
         });
@@ -42,6 +54,20 @@ export default function App() {
         }
 
         return "200";
+    }
+
+    function detectClick(buttonType: string) {
+        if (buttonType === "signout") {
+            axios({ method: "GET", url: "//localhost:3000/auth/signout" }).then(
+                (res: any) => {
+                    if (res.data === 200) {
+                        setIsAuthenticated(false);
+                    }
+                },
+            );
+        } else if (buttonType === "signin") {
+            navigate("/signin");
+        }
     }
 
     async function detectSubmit(form: string) {
@@ -94,44 +120,47 @@ export default function App() {
     }
 
     return (
-        <BrowserRouter>
-            <Routes>
+        <Routes>
+            <Route
+                path="/"
+                element={
+                    <Dashboard
+                        isAuthenticated={isAuthenticated}
+                        detectClick={detectClick}
+                    />
+                }
+            />
+            <Route element={<AuthLayout />}>
                 <Route
-                    path="/"
-                    element={<Dashboard isAuthenticated={isAuthenticated} />}
+                    path="/signin"
+                    element={
+                        <SignIn
+                            username={username}
+                            password={password}
+                            setUsername={setUsername}
+                            setPassword={setPassword}
+                            onSubmit={() => {
+                                detectSubmit("signin");
+                            }}
+                        />
+                    }
                 />
-                <Route element={<AuthLayout />}>
-                    <Route
-                        path="/signin"
-                        element={
-                            <SignIn
-                                username={username}
-                                password={password}
-                                setUsername={setUsername}
-                                setPassword={setPassword}
-                                onSubmit={() => {
-                                    detectSubmit("signin");
-                                }}
-                            />
-                        }
-                    />
-                    <Route
-                        path="/signup"
-                        element={
-                            <SignUp
-                                message={message}
-                                username={username}
-                                password={password}
-                                setUsername={setUsername}
-                                setPassword={setPassword}
-                                onSubmit={() => {
-                                    detectSubmit("signup");
-                                }}
-                            />
-                        }
-                    />
-                </Route>
-            </Routes>
-        </BrowserRouter>
+                <Route
+                    path="/signup"
+                    element={
+                        <SignUp
+                            message={message}
+                            username={username}
+                            password={password}
+                            setUsername={setUsername}
+                            setPassword={setPassword}
+                            onSubmit={() => {
+                                detectSubmit("signup");
+                            }}
+                        />
+                    }
+                />
+            </Route>
+        </Routes>
     );
 }
