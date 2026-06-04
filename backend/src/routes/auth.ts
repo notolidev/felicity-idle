@@ -111,7 +111,8 @@ router.get("/signout", async (req: express.Request, res: express.Response) => {
             const playerRefreshToken: any = hashRefreshToken(
                 req.cookies.refreshCookie,
             );
-            const deletedPlayer: any = await deleteSession(playerRefreshToken);
+
+            await deleteSession(playerRefreshToken);
 
             res.clearCookie("accessCookie");
             res.clearCookie("refreshCookie");
