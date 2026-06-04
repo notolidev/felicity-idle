@@ -4,6 +4,7 @@ import { verifyPassword } from "../auth/verifyPassword";
 import { getPlayer, insertPlayer } from "../db";
 import { signToken } from "../auth/signToken";
 import { maxUsernameLength } from "../db/schema";
+import { verifyToken } from "../auth/verifyToken";
 
 const router = express.Router({ mergeParams: true });
 
@@ -56,6 +57,20 @@ router.post("/signin", async (req: express.Request, res: express.Response) => {
         }
     } catch (err: any) {
         console.log(err.cause);
+    }
+});
+
+router.get("/me", (req: express.Request, res: express.Response) => {
+    if (!req.cookies.auth_cookie) {
+        res.status(401).send("Not logged in");
+        return;
+    }
+    try {
+        verifyToken(req.cookies.auth_cookie);
+        res.status(200).send("Success");
+    } catch (err: any) {
+        res.status(401).send("We cannot authenticate you.");
+        return;
     }
 });
 

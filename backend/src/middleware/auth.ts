@@ -16,6 +16,7 @@ export default function authenticateUser(
 
         next();
     } catch (err: any) {
-        res.send("We cannot authenticate you.");
+        res.status(401).send("We cannot authenticate you.");
+        return;
     }
 }

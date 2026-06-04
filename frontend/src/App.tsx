@@ -1,22 +1,33 @@
-"use client";
-
-// import { passwordCriteria } from "../../backend/src/db/schema";
-// import { useState } from "react";
+import { passwordCriteria } from "../../backend/src/db/schema";
+import { useState, useEffect } from "react";
 import axios from "axios";
-// import SignIn from "./components/auth/SignIn";
-// import SignUp from "./components/auth/SignUp";
+import { BrowserRouter, Routes, Route } from "react-router";
+import AuthLayout from "./components/auth/AuthLayout";
+import SignIn from "./components/auth/SignIn";
+import SignUp from "./components/auth/SignUp";
 import Dashboard from "./components/dashboard/Dashboard";
 import "./app.css";
 
 axios.defaults.withCredentials = true;
 
 export default function App() {
-    // const [form, setForm] = useState("signIn");
-    // const [username, setUsername] = useState("");
-    // const [password, setPassword] = useState("");
-    // const [message, setMessage] = useState("Sign Up");
+    const [username, setUsername] = useState("");
+    const [password, setPassword] = useState("");
+    const [message, setMessage] = useState("Sign Up");
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    useEffect(() => {
+        axios({
+            method: "GET",
+            url: "//localhost:3000/auth/me",
+        }).then((res) => {
+            if (res.status === 200) {
+                setIsAuthenticated(true);
+            } else {
+                setIsAuthenticated(false);
+            }
+        });
+    }, []);
 
-    /*
     function checkPassword(password: string): string {
         if (password.length < passwordCriteria.minimumLength) {
             return `Your password must be at least ${passwordCriteria.minimumLength} characters.`;
@@ -33,7 +44,7 @@ export default function App() {
         return "200";
     }
 
-    async function detectSubmit() {
+    async function detectSubmit(form: string) {
         if (!username || !password) {
             setMessage("Please fill out all fields.");
             return;
@@ -42,7 +53,7 @@ export default function App() {
         const checkPasswordValue: string = checkPassword(password);
 
         if (checkPasswordValue === "200") {
-            if (form === "signIn") {
+            if (form === "signin") {
                 axios({
                     method: "POST",
                     url: "//localhost:3000/auth/signin",
@@ -59,7 +70,7 @@ export default function App() {
                     .catch((err) => {
                         console.log(err);
                     });
-            } else if (form === "signUp") {
+            } else if (form === "signup") {
                 axios({
                     method: "POST",
                     url: "//localhost:3000/auth/signup",
@@ -81,45 +92,46 @@ export default function App() {
             setMessage(checkPasswordValue);
         }
     }
-    */
 
-    return <Dashboard />;
-
-    /*
     return (
-        <div className="auth-container">
-            <button
-                onClick={() => {
-                    form == "signIn"
-                        ? setForm("signUp")
-                        : form == "signUp"
-                          ? setForm("signIn")
-                          : null;
-                }}
-            >
-                Change form
-            </button>
-            {form == "signIn" ? (
-                <SignIn
-                    username={username}
-                    password={password}
-                    setUsername={setUsername}
-                    setPassword={setPassword}
-                    onSubmit={detectSubmit}
+        <BrowserRouter>
+            <Routes>
+                <Route
+                    path="/"
+                    element={<Dashboard isAuthenticated={isAuthenticated} />}
                 />
-            ) : form == "signUp" ? (
-                <SignUp
-                    message={message}
-                    username={username}
-                    password={password}
-                    setUsername={setUsername}
-                    setPassword={setPassword}
-                    onSubmit={detectSubmit}
-                />
-            ) : (
-                <h1>Wrong!</h1>
-            )}
-        </div>
+                <Route element={<AuthLayout />}>
+                    <Route
+                        path="/signin"
+                        element={
+                            <SignIn
+                                username={username}
+                                password={password}
+                                setUsername={setUsername}
+                                setPassword={setPassword}
+                                onSubmit={() => {
+                                    detectSubmit("signin");
+                                }}
+                            />
+                        }
+                    />
+                    <Route
+                        path="/signup"
+                        element={
+                            <SignUp
+                                message={message}
+                                username={username}
+                                password={password}
+                                setUsername={setUsername}
+                                setPassword={setPassword}
+                                onSubmit={() => {
+                                    detectSubmit("signup");
+                                }}
+                            />
+                        }
+                    />
+                </Route>
+            </Routes>
+        </BrowserRouter>
     );
-    */
 }
