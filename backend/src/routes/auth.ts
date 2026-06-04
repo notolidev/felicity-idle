@@ -7,6 +7,7 @@ import { maxUsernameLength } from "../db/schema";
 import { verifyAccessToken } from "../auth_helpers/access/verifyAccessToken";
 import crypto from "crypto";
 import { verifyRefreshToken } from "../auth_helpers/refresh/verifyRefreshToken";
+import { hashRefreshToken } from "../auth_helpers/refresh/hashRefreshToken";
 
 const router = express.Router({ mergeParams: true });
 
@@ -101,19 +102,21 @@ router.post("/signin", async (req: express.Request, res: express.Response) => {
     }
 });
 
-router.get("/signout", (req: express.Request, res: express.Response) => {
+router.get("/signout", async (req: express.Request, res: express.Response) => {
     if (!req.cookies.accessCookie || !req.cookies.refreshCookie) {
         res.status(401).send("Not logged in");
         return;
     } else {
         try {
-            const player: any = verifyAccessToken(req.cookies.accessCookie);
-            const deletedPlayer: any = deleteSession(player.player_id);
+            const playerRefreshToken: any = hashRefreshToken(
+                req.cookies.accessCookie,
+            );
+            const deletedPlayer: any = await deleteSession(playerRefreshToken);
 
             res.clearCookie("accessCookie");
             res.clearCookie("refreshCookie");
 
-            res.status(200).send(200);
+            res.sendStatus(200);
         } catch (err: any) {
             res.send("Error");
         }
