@@ -15,6 +15,43 @@
     cursor: pointer;
 }
 
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.coins {
+    display: flex;
+    gap: 1rem;
+}
+
+.coins-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 600;
+}
+
+.coin-icon {
+    display: flex;
+    width: 18px;
+    height: 18px;
+    color: #d4a017;
+}
+
+.coin-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.coins-label {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: #888;
+    text-transform: uppercase;
+}
+
 .dashboard-main {
     padding: 2rem 1.5rem;
 }
@@ -22,6 +59,10 @@
 .dashboard-heading {
     margin: 0 0 1.5rem;
     font-size: 1.5rem;
+}
+
+.activities + .dashboard-heading {
+    margin-top: 2.5rem;
 }
 
 .activities {
@@ -74,4 +115,44 @@
 
 .activity-action:hover {
     opacity: 0.9;
+}
+
+.skills {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.skill-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.skill-icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+
+.skill-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.skill-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.skill-name {
+    font-weight: 600;
+}
+
+.skill-xp {
+    font-size: 0.875rem;
+    color: #555;
 }

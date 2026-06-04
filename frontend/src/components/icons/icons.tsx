@@ -39,6 +39,23 @@ export function FarmingIcon() {
     );
 }
 
+export function CoinIcon() {
+    return (
+        <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.8}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        >
+            <circle cx="12" cy="12" r="9" />
+            <path d="M15.5 9.5h-4a1.75 1.75 0 0 0 0 3.5h1a1.75 1.75 0 0 1 0 3.5h-4" />
+            <path d="M12 7.5v9" />
+        </svg>
+    );
+}
+
 export function MiningIcon() {
     return (
         <svg

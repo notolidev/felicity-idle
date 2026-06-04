@@ -1,11 +1,21 @@
-import ActivityCard from "./ActivityCard";
-import { CombatIcon, FarmingIcon, MiningIcon } from "./icons";
+import ActivityCard from "./cards/ActivityCard";
+import SkillCard from "./cards/SkillCard";
+import CoinsDisplay from "./cards/CoinsDisplay";
+import { CombatIcon, FarmingIcon, MiningIcon } from "../icons/icons";
 import "./dashboard.css";
 
 interface DashboardTypes {
     isAuthenticated: boolean;
     detectClick: (buttonType: string) => void;
 }
+
+const skills = [
+    { icon: <CombatIcon />, name: "Combat", xp: 0, accent: "#c0392b" },
+    { icon: <FarmingIcon />, name: "Farming", xp: 0, accent: "#4a9d4e" },
+    { icon: <MiningIcon />, name: "Mining", xp: 0, accent: "#4a6fa5" },
+];
+
+const coins = { purse: 0, bank: 0 };
 
 const activities = [
     {
@@ -42,17 +52,22 @@ export default function Dashboard({
         <div className="dashboard">
             <nav className="navbar">
                 <span className="navbar-brand">Felicity</span>
-                <span
-                    className="navbar-signin"
-                    onClick={() => {
-                        const buttonType: any =
-                            isAuthenticated === true ? "signout" : "signin";
+                <div className="navbar-right">
+                    {isAuthenticated === true && (
+                        <CoinsDisplay purse={coins.purse} bank={coins.bank} />
+                    )}
+                    <span
+                        className="navbar-signin"
+                        onClick={() => {
+                            const buttonType: any =
+                                isAuthenticated === true ? "signout" : "signin";
 
-                        detectClick(buttonType);
-                    }}
-                >
-                    {isAuthenticated === true ? "Sign Out" : "Sign In"}
-                </span>
+                            detectClick(buttonType);
+                        }}
+                    >
+                        {isAuthenticated === true ? "Sign Out" : "Sign In"}
+                    </span>
+                </div>
             </nav>
 
             {isAuthenticated === true && (
@@ -68,6 +83,19 @@ export default function Dashboard({
                                 actionLabel={activity.actionLabel}
                                 accent={activity.accent}
                                 onAction={activity.onAction}
+                            />
+                        ))}
+                    </div>
+
+                    <h2 className="dashboard-heading">Skills</h2>
+                    <div className="skills">
+                        {skills.map((skill) => (
+                            <SkillCard
+                                key={skill.name}
+                                icon={skill.icon}
+                                name={skill.name}
+                                xp={skill.xp}
+                                accent={skill.accent}
                             />
                         ))}
                     </div>
