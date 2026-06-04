@@ -1,10 +1,12 @@
 import express from "express";
-import { hashPassword } from "../auth/hashPassword";
-import { verifyPassword } from "../auth/verifyPassword";
-import { getPlayer, insertPlayer } from "../db";
-import { signToken } from "../auth/signToken";
+import { hashPassword } from "../auth_helpers/password/hashPassword";
+import { verifyPassword } from "../auth_helpers/password/verifyPassword";
+import { getPlayer, insertPlayer, insertSession } from "../db";
+import { signToken } from "../auth_helpers/access/signAccessToken";
 import { maxUsernameLength } from "../db/schema";
-import { verifyToken } from "../auth/verifyToken";
+import { verifyAccessToken } from "../auth_helpers/access/verifyAccessToken";
+import crypto from "crypto";
+import { verifyRefreshToken } from "../auth_helpers/refresh/verifyRefreshToken";
 
 const router = express.Router({ mergeParams: true });
 
@@ -17,9 +19,25 @@ router.post("/signup", async (req: express.Request, res: express.Response) => {
             hashed_password,
         );
 
-        const token: any = signToken(player_id);
+        const refreshTokenBuffer: Buffer = crypto.randomBytes(32);
+        const refreshToken: string = refreshTokenBuffer.toString("base64url");
 
-        res.cookie("auth_cookie", token, {
+        const accessToken: any = signToken(player_id);
+
+        const refreshTokenHash: string = crypto.hash("sha256", refreshToken);
+        const expiration: Date = new Date(
+            Date.now() + 1000 * 60 * 60 * 24 * 7 * 4,
+        );
+
+        await insertSession(player_id, refreshTokenHash, expiration);
+
+        res.cookie("accessCookie", accessToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "strict",
+        });
+
+        res.cookie("refreshCookie", refreshToken, {
             httpOnly: true,
             secure: true,
             sameSite: "strict",
@@ -40,20 +58,43 @@ router.post("/signup", async (req: express.Request, res: express.Response) => {
 router.post("/signin", async (req: express.Request, res: express.Response) => {
     try {
         const player: any = await getPlayer(req.body.username);
+        const player_id: any = player[0].player_id;
 
         if (
             (await verifyPassword(
-                player.hashed_password,
+                player[0].password_hash,
                 req.body.password,
             )) === true
         ) {
-            const token: any = signToken(player.player_id);
+            const refreshTokenBuffer: Buffer = crypto.randomBytes(32);
+            const refreshToken: string =
+                refreshTokenBuffer.toString("base64url");
 
-            res.cookie("auth_cookie", token, {
+            const accessToken: any = signToken(player_id);
+
+            const refreshTokenHash: string = crypto.hash(
+                "sha256",
+                refreshToken,
+            );
+            const expiration: Date = new Date(
+                Date.now() + 1000 * 60 * 60 * 24 * 7 * 4,
+            );
+
+            await insertSession(player_id, refreshTokenHash, expiration);
+
+            res.status(200).cookie("accessCookie", accessToken, {
                 httpOnly: true,
                 secure: true,
                 sameSite: "strict",
             });
+
+            res.status(200).cookie("refreshCookie", refreshToken, {
+                httpOnly: true,
+                secure: true,
+                sameSite: "strict",
+            });
+
+            res.send("ok");
         }
     } catch (err: any) {
         console.log(err.cause);
@@ -61,13 +102,46 @@ router.post("/signin", async (req: express.Request, res: express.Response) => {
 });
 
 router.get("/me", (req: express.Request, res: express.Response) => {
-    if (!req.cookies.auth_cookie) {
+    if (!req.cookies.accessCookie) {
         res.status(401).send("Not logged in");
         return;
     }
     try {
-        verifyToken(req.cookies.auth_cookie);
-        res.status(200).send("Success");
+        verifyAccessToken(req.cookies.accessCookie);
+        res.status(200).send("ok");
+    } catch (err: any) {
+        res.status(401).send("We cannot authenticate you.");
+        return;
+    }
+});
+
+router.get("/refresh", async (req: express.Request, res: express.Response) => {
+    if (!req.cookies.refreshCookie) {
+        res.status(401).send("Not logged in");
+        return;
+    }
+
+    try {
+        const player_id: any = await verifyRefreshToken(
+            req.cookies.refreshCookie,
+        );
+
+        if (player_id === "401") {
+            res.status(401).send("We cannot authenticate you");
+            return;
+        } else if (player_id !== "401") {
+            const accessToken: any = signToken(player_id);
+
+            res.status(200).cookie("accessCookie", accessToken, {
+                httpOnly: true,
+                secure: true,
+                sameSite: "strict",
+            });
+
+            return;
+        }
+
+        res.status(200).send("ok");
     } catch (err: any) {
         res.status(401).send("We cannot authenticate you.");
         return;
