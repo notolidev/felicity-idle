@@ -1,7 +1,7 @@
 import { passwordCriteria } from "../../backend/src/db/schema";
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Routes, Route, useNavigate } from "react-router";
+import { Routes, Route, useNavigate, Navigate } from "react-router";
 import AuthLayout from "./components/auth/AuthLayout";
 import SignIn from "./components/auth/SignIn";
 import SignUp from "./components/auth/SignUp";
@@ -141,30 +141,38 @@ export default function App() {
                 <Route
                     path="/signin"
                     element={
-                        <SignIn
-                            username={username}
-                            password={password}
-                            setUsername={setUsername}
-                            setPassword={setPassword}
-                            onSubmit={() => {
-                                detectSubmit("signin");
-                            }}
-                        />
+                        isAuthenticated ? (
+                            <Navigate to="/" />
+                        ) : (
+                            <SignIn
+                                username={username}
+                                password={password}
+                                setUsername={setUsername}
+                                setPassword={setPassword}
+                                onSubmit={() => {
+                                    detectSubmit("signin");
+                                }}
+                            />
+                        )
                     }
                 />
                 <Route
                     path="/signup"
                     element={
-                        <SignUp
-                            message={message}
-                            username={username}
-                            password={password}
-                            setUsername={setUsername}
-                            setPassword={setPassword}
-                            onSubmit={() => {
-                                detectSubmit("signup");
-                            }}
-                        />
+                        isAuthenticated ? (
+                            <Navigate to="/" />
+                        ) : (
+                            <SignUp
+                                message={message}
+                                username={username}
+                                password={password}
+                                setUsername={setUsername}
+                                setPassword={setPassword}
+                                onSubmit={() => {
+                                    detectSubmit("signup");
+                                }}
+                            />
+                        )
                     }
                 />
             </Route>
