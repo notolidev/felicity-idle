@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
 import { CombatIcon, FarmingIcon, MiningIcon } from "../icons/icons";
 import ActivityCard from "./cards/ActivityCard";
 import CoinsDisplay from "./cards/CoinsDisplay";
 import combat from "../../lib/skills/combat";
 import SkillCard from "./cards/SkillCard";
+import type { CombatResult } from "../../lib/types";
 import "./dashboard.css";
 
 interface DashboardTypes {
@@ -10,54 +12,82 @@ interface DashboardTypes {
     detectClick: (buttonType: string) => void;
 }
 
-const skills = [
-    { icon: <CombatIcon />, name: "Combat", xp: 0, accent: "#c0392b" },
-    { icon: <FarmingIcon />, name: "Farming", xp: 0, accent: "#4a9d4e" },
-    { icon: <MiningIcon />, name: "Mining", xp: 0, accent: "#4a6fa5" },
-];
-
-const coins = { purse: 0, bank: 0 };
-
-const activities = [
-    {
-        icon: <CombatIcon />,
-        title: "Combat",
-        description: "Fight monsters to earn Combat XP and loot.",
-        actionLabel: "Fight",
-        accent: "#c0392b",
-        onAction: () => {
-            combat;
-        },
-    },
-    {
-        icon: <FarmingIcon />,
-        title: "Farming",
-        description: "Harvest crops to earn Farming XP and resources.",
-        actionLabel: "Farm",
-        accent: "#4a9d4e",
-        onAction: () => {},
-    },
-    {
-        icon: <MiningIcon />,
-        title: "Mining",
-        description: "Mine ore to earn Mining XP and resources.",
-        actionLabel: "Mine",
-        accent: "#4a6fa5",
-        onAction: () => {},
-    },
-];
-
 export default function Dashboard({
     isAuthenticated,
     detectClick,
 }: DashboardTypes) {
+    const [combatXp, setCombatXp] = useState(0);
+    const [purse, setPurse] = useState(0);
+    const [combatCooldown, setCombatCooldown] = useState(false);
+    const [fightOutcome, setFightOutcome] = useState<CombatResult | null>(null);
+
+    function handleFight() {
+        if (combatCooldown === true) {
+            return;
+        }
+
+        const result = combat(combatXp);
+        setCombatXp((xp) => xp + result.xp);
+        setPurse((coins) => coins + result.coins);
+        setFightOutcome(result);
+
+        setCombatCooldown(true);
+        setTimeout(() => {
+            setCombatCooldown(false);
+            setFightOutcome(null);
+        }, 2000);
+    }
+
+    // useEffect()
+
+    const skills = [
+        {
+            icon: <CombatIcon />,
+            name: "Combat",
+            xp: combatXp,
+            accent: "#c0392b",
+        },
+        { icon: <FarmingIcon />, name: "Farming", xp: 0, accent: "#4a9d4e" },
+        { icon: <MiningIcon />, name: "Mining", xp: 0, accent: "#4a6fa5" },
+    ];
+
+    const activities = [
+        {
+            icon: <CombatIcon />,
+            title: "Combat",
+            description: "Fight monsters to earn Combat XP and loot.",
+            actionLabel: combatCooldown === true ? "Resting…" : "Fight",
+            accent: "#c0392b",
+            onAction: handleFight,
+            disabled: combatCooldown,
+        },
+        {
+            icon: <FarmingIcon />,
+            title: "Farming",
+            description: "Harvest crops to earn Farming XP and resources.",
+            actionLabel: "Farm",
+            accent: "#4a9d4e",
+            onAction: () => {},
+            disabled: false,
+        },
+        {
+            icon: <MiningIcon />,
+            title: "Mining",
+            description: "Mine ore to earn Mining XP and resources.",
+            actionLabel: "Mine",
+            accent: "#4a6fa5",
+            onAction: () => {},
+            disabled: false,
+        },
+    ];
+
     return (
         <div className="dashboard">
             <nav className="navbar">
                 <span className="navbar-brand">Felicity</span>
                 <div className="navbar-right">
                     {isAuthenticated === true && (
-                        <CoinsDisplay purse={coins.purse} bank={coins.bank} />
+                        <CoinsDisplay purse={purse} bank={0} />
                     )}
                     <span
                         className="navbar-signin"
@@ -73,6 +103,20 @@ export default function Dashboard({
                 </div>
             </nav>
 
+            {fightOutcome !== null && (
+                <div
+                    className={
+                        fightOutcome.result === "win"
+                            ? "combat-toast combat-toast-win"
+                            : "combat-toast combat-toast-loss"
+                    }
+                >
+                    {fightOutcome.result === "win"
+                        ? `Victory! +${fightOutcome.xp} XP, +${fightOutcome.coins} coins`
+                        : "Defeat. You came away with nothing"}
+                </div>
+            )}
+
             {isAuthenticated === true && (
                 <main className="dashboard-main">
                     <h2 className="dashboard-heading">Activities</h2>
@@ -86,6 +130,7 @@ export default function Dashboard({
                                 actionLabel={activity.actionLabel}
                                 accent={activity.accent}
                                 onAction={activity.onAction}
+                                disabled={activity.disabled}
                             />
                         ))}
                     </div>

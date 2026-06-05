@@ -34,6 +34,10 @@ export class Enemy {
         }
     }
 
+    public doDamage(): number {
+        return randomIntInRange(this.damageRange);
+    }
+
     public isDead(): boolean {
         if (this.health <= 0) {
             return true;

@@ -5,3 +5,9 @@ export type Stats = {
     damageRange: Range<number>;
     coinsHeld: number;
 };
+
+export type CombatResult = {
+    result: string;
+    coins: number;
+    xp: number;
+};

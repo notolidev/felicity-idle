@@ -5,6 +5,7 @@ interface ActivityCardProps {
     actionLabel: string;
     accent: string;
     onAction: () => void;
+    disabled: boolean;
 }
 
 export default function ActivityCard({
@@ -14,6 +15,7 @@ export default function ActivityCard({
     actionLabel,
     accent,
     onAction,
+    disabled,
 }: ActivityCardProps) {
     return (
         <div className="activity-card">
@@ -27,6 +29,7 @@ export default function ActivityCard({
                 className="activity-action"
                 style={{ background: accent }}
                 onClick={onAction}
+                disabled={disabled}
             >
                 {actionLabel}
             </button>
