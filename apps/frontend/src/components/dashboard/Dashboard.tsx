@@ -5,7 +5,7 @@ import CoinsDisplay from "./cards/CoinsDisplay";
 import SkillCard from "./cards/SkillCard";
 import type { CombatResult } from "@felicity/shared";
 import "./dashboard.css";
-import axios from "axios";
+import { api } from "../../api";
 
 interface DashboardTypes {
     isAuthenticated: boolean;
@@ -28,9 +28,9 @@ export default function Dashboard({
 
         let ignore = false;
 
-        axios({
+        api({
             method: "GET",
-            url: "//localhost:3000/skill",
+            url: "/skill",
         })
             .then((res) => {
                 if (ignore === true) {
@@ -54,9 +54,9 @@ export default function Dashboard({
         }
 
         function sendCombat() {
-            return axios({
+            return api({
                 method: "POST",
-                url: "//localhost:3000/skill/combat",
+                url: "/skill/combat",
                 data: {},
             });
         }
@@ -70,30 +70,12 @@ export default function Dashboard({
 
         sendCombat()
             .then((res) => {
-                console.log(res);
                 applyResult(res);
             })
             .catch((err) => {
-                if (err.response?.status === 401) {
-                    axios({
-                        method: "GET",
-                        url: "//localhost:3000/auth/refresh",
-                    })
-                        .then(() => {
-                            sendCombat()
-                                .then((res) => {
-                                    applyResult(res);
-                                })
-                                .catch((err) => {
-                                    console.log(err);
-                                });
-                        })
-                        .catch((err) => {
-                            console.log(err);
-                        });
-                } else {
-                    console.log(err);
-                }
+                // The interceptor already handled any 401 (refresh + retry).
+                // If it still threw, the refresh is dead and we're logged out.
+                console.log(err);
             });
 
         setCombatCooldown(true);

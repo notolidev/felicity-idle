@@ -1,14 +1,12 @@
 import { passwordCriteria } from "@felicity/shared";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import { api, setUnauthorizedHandler } from "./api";
 import { Routes, Route, useNavigate, Navigate } from "react-router";
 import AuthLayout from "./components/auth/AuthLayout";
 import SignIn from "./components/auth/SignIn";
 import SignUp from "./components/auth/SignUp";
 import Dashboard from "./components/dashboard/Dashboard";
 import "./app.css";
-
-axios.defaults.withCredentials = true;
 
 export default function App() {
     const [username, setUsername] = useState("");
@@ -18,26 +16,13 @@ export default function App() {
     let navigate = useNavigate();
 
     useEffect(() => {
-        axios({
-            method: "GET",
-            url: "//localhost:3000/auth/me",
-        }).then((res) => {
-            if (res.status === 200) {
-                setIsAuthenticated(true);
-            } else if (res.status === 401) {
-                axios({
-                    method: "GET",
-                    url: "//localhost:3000/auth/refresh",
-                }).then((res2) => {
-                    if (res2.status === 200) {
-                        setIsAuthenticated(true);
-                    } else {
-                        setIsAuthenticated(false);
-                    }
-                });
-                setIsAuthenticated(false);
-            }
-        });
+        setUnauthorizedHandler(() => setIsAuthenticated(false));
+    }, []);
+
+    useEffect(() => {
+        api.get("/auth/me")
+            .then(() => setIsAuthenticated(true))
+            .catch(() => setIsAuthenticated(false));
     }, []);
 
     function checkPassword(password: string): string {
@@ -58,15 +43,13 @@ export default function App() {
 
     function detectClick(buttonType: string) {
         if (buttonType === "signout") {
-            axios({ method: "GET", url: "//localhost:3000/auth/signout" }).then(
-                (res: any) => {
-                    console.log(res.data);
-                    if (res.data === "OK") {
-                        setIsAuthenticated(false);
-                        navigate("/");
-                    }
-                },
-            );
+            api({ method: "GET", url: "/auth/signout" }).then((res: any) => {
+                console.log(res.data);
+                if (res.data === "OK") {
+                    setIsAuthenticated(false);
+                    navigate("/");
+                }
+            });
         } else if (buttonType === "signin") {
             navigate("/signin");
         }
@@ -82,9 +65,9 @@ export default function App() {
 
         if (checkPasswordValue === "200") {
             if (form === "signin") {
-                axios({
+                api({
                     method: "POST",
-                    url: "//localhost:3000/auth/signin",
+                    url: "/auth/signin",
                     data: {
                         username: username,
                         password: password,
@@ -102,9 +85,9 @@ export default function App() {
                         console.log(err);
                     });
             } else if (form === "signup") {
-                axios({
+                api({
                     method: "POST",
-                    url: "//localhost:3000/auth/signup",
+                    url: "/auth/signup",
                     data: {
                         username: username,
                         password: password,
