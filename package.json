@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
         "dev": "pnpm --filter @felicity/frontend dev",
-        "server": "pnpm --filter @felicity/backend server",
+        "backend": "pnpm --filter @felicity/backend backend",
         "build": "pnpm --filter @felicity/frontend build",
         "lint": "eslint ."
     },
