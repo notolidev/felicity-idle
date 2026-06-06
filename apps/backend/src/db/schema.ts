@@ -32,6 +32,7 @@ export const player_skills = pgTable(
             .notNull(),
         skill_type: text().notNull(),
         xp: doublePrecision().notNull(),
+        last_action_at: timestamp({ withTimezone: true, mode: "date" }),
     },
     (table) => [primaryKey({ columns: [table.player_id, table.skill_type] })],
 );

@@ -155,7 +155,7 @@ router.get("/refresh", async (req: express.Request, res: express.Response) => {
         } else if (player_id !== "401") {
             const accessToken: any = signToken(player_id);
 
-            res.status(200).cookie("accessCookie", accessToken, {
+            res.sendStatus(200).cookie("accessCookie", accessToken, {
                 httpOnly: true,
                 secure: true,
                 sameSite: "strict",

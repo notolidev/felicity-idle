@@ -87,11 +87,7 @@ export async function deleteSession(hashedRefreshToken: string) {
     }
 }
 
-export async function addXp(
-    player_id: number,
-    skill_type: string,
-    xp: number,
-) {
+export async function addXp(player_id: number, skill_type: string, xp: number) {
     try {
         return await db
             .insert(tables.player_skills)
@@ -99,13 +95,17 @@ export async function addXp(
                 player_id: player_id,
                 skill_type: skill_type,
                 xp: xp,
+                last_action_at: new Date(),
             })
             .onConflictDoUpdate({
                 target: [
                     tables.player_skills.player_id,
                     tables.player_skills.skill_type,
                 ],
-                set: { xp: sql`${tables.player_skills.xp} + ${xp}` },
+                set: {
+                    xp: sql`${tables.player_skills.xp} + ${xp}`,
+                    last_action_at: new Date(),
+                },
             });
     } catch (err) {
         throw err;

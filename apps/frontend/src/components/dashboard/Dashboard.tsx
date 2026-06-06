@@ -4,6 +4,7 @@ import ActivityCard from "./cards/ActivityCard";
 import CoinsDisplay from "./cards/CoinsDisplay";
 import SkillCard from "./cards/SkillCard";
 import type { CombatResult } from "@felicity/shared";
+import { combatCooldownMs } from "@felicity/shared";
 import "./dashboard.css";
 import { api } from "../../api";
 
@@ -27,6 +28,7 @@ export default function Dashboard({
         }
 
         let ignore = false;
+        let cooldownTimeout: ReturnType<typeof setTimeout> | undefined;
 
         api({
             method: "GET",
@@ -38,6 +40,14 @@ export default function Dashboard({
                 }
                 setCombatXp(res.data.combatXp);
                 setPurse(res.data.purse);
+
+                const remaining = res.data.combatCooldownRemaining;
+                if (remaining > 0) {
+                    setCombatCooldown(true);
+                    cooldownTimeout = setTimeout(() => {
+                        setCombatCooldown(false);
+                    }, remaining);
+                }
             })
             .catch((err) => {
                 console.log(err);
@@ -45,6 +55,7 @@ export default function Dashboard({
 
         return () => {
             ignore = true;
+            clearTimeout(cooldownTimeout);
         };
     }, [isAuthenticated]);
 
@@ -73,8 +84,6 @@ export default function Dashboard({
                 applyResult(res);
             })
             .catch((err) => {
-                // The interceptor already handled any 401 (refresh + retry).
-                // If it still threw, the refresh is dead and we're logged out.
                 console.log(err);
             });
 
@@ -82,7 +91,7 @@ export default function Dashboard({
         setTimeout(() => {
             setCombatCooldown(false);
             setFightOutcome(null);
-        }, 2000);
+        }, combatCooldownMs);
     }
 
     const skills = [
