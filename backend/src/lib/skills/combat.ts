@@ -1,7 +1,7 @@
 // To do: build combat loop
-import { Enemy } from "../models/enemy";
-import type { CombatResult } from "../types";
-import convertXpToLevel from "../utils/convertXpToLevel";
+import { Enemy } from "/home/oli/projects/code/felicity-idle/backend/src/lib/models/enemy.ts";
+import type { CombatResult } from "../../../../frontend/src/lib/types.ts";
+import convertXpToLevel from "../../../../frontend/src/lib/utils/convertXpToLevel";
 
 export default function combat(combatXP: number): CombatResult {
     // Convert XP to level

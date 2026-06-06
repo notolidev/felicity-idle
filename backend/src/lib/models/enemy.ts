@@ -1,5 +1,5 @@
-import type { Range, Stats } from "../types";
-import { randomIntInRange } from "../utils/randomIntInRage";
+import type { Range, Stats } from "../../../../frontend/src/lib/types.ts";
+import { randomIntInRange } from "../../../src/lib/utils/randomIntInRage.ts";
 
 export class Enemy {
     private maxHealth: number;

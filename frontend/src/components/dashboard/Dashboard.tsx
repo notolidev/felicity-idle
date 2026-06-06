@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import { CombatIcon, FarmingIcon, MiningIcon } from "../icons/icons";
 import ActivityCard from "./cards/ActivityCard";
 import CoinsDisplay from "./cards/CoinsDisplay";
-import combat from "../../lib/skills/combat";
+import combat from "../../../../backend/src/skills/combat";
 import SkillCard from "./cards/SkillCard";
-import type { CombatResult } from "../../lib/types";
+import type { CombatResult } from "../../lib/types.ts";
 import "./dashboard.css";
+import axios from "axios";
 
 interface DashboardTypes {
     isAuthenticated: boolean;
@@ -30,6 +31,12 @@ export default function Dashboard({
         setCombatXp((xp) => xp + result.xp);
         setPurse((coins) => coins + result.coins);
         setFightOutcome(result);
+
+        axios({
+            method: "POST",
+            url: "//localhost:3000/xp/combat",
+            data: {},
+        });
 
         setCombatCooldown(true);
         setTimeout(() => {
