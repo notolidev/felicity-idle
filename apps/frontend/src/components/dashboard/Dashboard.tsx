@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CombatIcon, FarmingIcon, MiningIcon } from "../icons/icons";
 import ActivityCard from "./cards/ActivityCard";
 import CoinsDisplay from "./cards/CoinsDisplay";
@@ -21,27 +21,79 @@ export default function Dashboard({
     const [combatCooldown, setCombatCooldown] = useState(false);
     const [fightOutcome, setFightOutcome] = useState<CombatResult | null>(null);
 
+    useEffect(() => {
+        if (isAuthenticated !== true) {
+            return;
+        }
+
+        let ignore = false;
+
+        axios({
+            method: "GET",
+            url: "//localhost:3000/skill",
+        })
+            .then((res) => {
+                if (ignore === true) {
+                    return;
+                }
+                setCombatXp(res.data.combatXp);
+                setPurse(res.data.purse);
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+
+        return () => {
+            ignore = true;
+        };
+    }, [isAuthenticated]);
+
     function handleFight() {
         if (combatCooldown === true) {
             return;
         }
 
-        const result: CombatResult = { result: "loss", coins: 0, xp: 0 };
-        setCombatXp((xp) => xp + result.xp);
-        setPurse((coins) => coins + result.coins);
-        setFightOutcome(result);
+        function sendCombat() {
+            return axios({
+                method: "POST",
+                url: "//localhost:3000/skill/combat",
+                data: {},
+            });
+        }
 
-        axios({
-            method: "POST",
-            url: "//localhost:3000/skill/combat",
-            data: {},
-        })
+        function applyResult(res: any) {
+            const result: CombatResult = res.data;
+            setCombatXp((xp) => xp + result.xp);
+            setPurse((coins) => coins + result.coins);
+            setFightOutcome(result);
+        }
+
+        sendCombat()
             .then((res) => {
-                if (res.status === 200) {
-                }
+                console.log(res);
+                applyResult(res);
             })
             .catch((err) => {
-                console.log(err);
+                if (err.response?.status === 401) {
+                    axios({
+                        method: "GET",
+                        url: "//localhost:3000/auth/refresh",
+                    })
+                        .then(() => {
+                            sendCombat()
+                                .then((res) => {
+                                    applyResult(res);
+                                })
+                                .catch((err) => {
+                                    console.log(err);
+                                });
+                        })
+                        .catch((err) => {
+                            console.log(err);
+                        });
+                } else {
+                    console.log(err);
+                }
             });
 
         setCombatCooldown(true);

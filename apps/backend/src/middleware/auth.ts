@@ -12,7 +12,9 @@ export default function authenticateUser(
     }
 
     try {
-        verifyAccessToken(req.cookies.accessCookie);
+        const decoded: any = verifyAccessToken(req.cookies.accessCookie);
+
+        res.locals.player_id = decoded.player_id;
 
         next();
     } catch (err: any) {

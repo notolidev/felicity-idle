@@ -127,3 +127,46 @@ export async function getXp(player_id: number, skill_type: string) {
         throw err;
     }
 }
+
+export async function getEconomy(player_id: number) {
+    try {
+        return await db
+            .select()
+            .from(tables.player_economy)
+            .where(eq(tables.player_economy.player_id, player_id));
+    } catch (err) {
+        throw err;
+    }
+}
+
+export async function addCoins(
+    player_id: number,
+    coin_type: "purse" | "bank",
+    amount: number,
+) {
+    try {
+        const values =
+            coin_type === "purse"
+                ? { player_id: player_id, coins_purse: amount, coins_bank: 0 }
+                : { player_id: player_id, coins_purse: 0, coins_bank: amount };
+
+        const set =
+            coin_type === "purse"
+                ? {
+                      coins_purse: sql`${tables.player_economy.coins_purse} + ${amount}`,
+                  }
+                : {
+                      coins_bank: sql`${tables.player_economy.coins_bank} + ${amount}`,
+                  };
+
+        return await db
+            .insert(tables.player_economy)
+            .values(values)
+            .onConflictDoUpdate({
+                target: tables.player_economy.player_id,
+                set: set,
+            });
+    } catch (err) {
+        throw err;
+    }
+}
