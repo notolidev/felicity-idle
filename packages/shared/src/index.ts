@@ -4,6 +4,7 @@ export type {
     ResourceStats,
     CombatResult,
     GatherResult,
+    CollectionEntry,
 } from "./types";
 export { default as convertXpToLevel } from "./convertXpToLevel";
 export { maxUsernameLength, passwordCriteria } from "./auth";

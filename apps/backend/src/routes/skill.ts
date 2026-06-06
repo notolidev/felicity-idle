@@ -6,7 +6,14 @@ import type { GatherConfig } from "../lib/skills/gather";
 import { farmingConfig } from "../lib/skills/farming";
 import { miningConfig } from "../lib/skills/mining";
 import { combatCooldownMs } from "@felicity/shared";
-import { getXp, addXp, getEconomy, addCoins } from "../db";
+import {
+    getXp,
+    addXp,
+    getEconomy,
+    addCoins,
+    persistGather,
+    getCollections,
+} from "../db";
 
 const router = express.Router({ mergeParams: true });
 
@@ -59,6 +66,25 @@ router.get("/", async (_req: express.Request, res: express.Response) => {
     }
 });
 
+router.get(
+    "/collections",
+    async (_req: express.Request, res: express.Response) => {
+        try {
+            const player_id: any = res.locals.player_id;
+
+            const rows: any = await getCollections(player_id);
+            const collections = rows.map((row: any) => ({
+                item: row.item_type,
+                amount: row.amount,
+            }));
+
+            res.status(200).json({ collections });
+        } catch (err: any) {
+            res.status(500).send("Something went wrong");
+        }
+    },
+);
+
 router.post("/combat", async (_req: express.Request, res: express.Response) => {
     try {
         const player_id: any = res.locals.player_id;
@@ -108,8 +134,17 @@ async function runGather(
     const result = gather(currentXp, config);
 
     const newCooldownUntil: Date = new Date(Date.now() + result.cooldownMs);
-    await addXp(player_id, skillType, result.xp, newCooldownUntil);
-    await addCoins(player_id, "purse", result.coins);
+    // result.item / result.amount come from the server-side gather roll, never
+    // from the client — so the collection write stays inside the trust boundary.
+    await persistGather(
+        player_id,
+        skillType,
+        result.item,
+        result.amount,
+        result.xp,
+        result.coins,
+        newCooldownUntil,
+    );
 
     res.status(200).json(result);
 }

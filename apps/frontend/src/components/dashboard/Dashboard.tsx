@@ -2,9 +2,14 @@ import { useEffect, useRef, useState } from "react";
 import { CombatIcon, FarmingIcon, MiningIcon } from "../icons/icons";
 import ActivityCard from "./cards/ActivityCard";
 import CoinsDisplay from "./cards/CoinsDisplay";
+import CollectionCard from "./cards/CollectionCard";
 import SkillCard from "./cards/SkillCard";
 import Notification from "./Notification";
-import type { CombatResult, GatherResult } from "@felicity/shared";
+import type {
+    CombatResult,
+    GatherResult,
+    CollectionEntry,
+} from "@felicity/shared";
 import { combatCooldownMs } from "@felicity/shared";
 import "./dashboard.css";
 import { api } from "../../api";
@@ -28,6 +33,7 @@ export default function Dashboard({
     const [farmingXp, setFarmingXp] = useState(0);
     const [miningXp, setMiningXp] = useState(0);
     const [purse, setPurse] = useState(0);
+    const [collections, setCollections] = useState<CollectionEntry[]>([]);
     const [combatCooldown, setCombatCooldown] = useState(false);
     const [farmingCooldownEnd, setFarmingCooldownEnd] = useState<number | null>(
         null,
@@ -45,6 +51,20 @@ export default function Dashboard({
         setTimeout(() => {
             setNotifications((current) => current.filter((n) => n.id !== id));
         }, 4000);
+    }
+
+    function addToCollections(item: string, amount: number) {
+        setCollections((current) => {
+            const exists = current.some((entry) => entry.item === item);
+            if (exists === false) {
+                return [...current, { item, amount }];
+            }
+            return current.map((entry) =>
+                entry.item === item
+                    ? { ...entry, amount: entry.amount + amount }
+                    : entry,
+            );
+        });
     }
 
     useEffect(() => {
@@ -85,6 +105,20 @@ export default function Dashboard({
                 if (miningRemaining > 0) {
                     setMiningCooldownEnd(Date.now() + miningRemaining);
                 }
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+
+        api({
+            method: "GET",
+            url: "/skill/collections",
+        })
+            .then((res) => {
+                if (ignore === true) {
+                    return;
+                }
+                setCollections(res.data.collections);
             })
             .catch((err) => {
                 console.log(err);
@@ -195,6 +229,7 @@ export default function Dashboard({
             const result: GatherResult = res.data;
             setFarmingXp((xp) => xp + result.xp);
             setPurse((coins) => coins + result.coins);
+            addToCollections(result.item, result.amount);
             addNotification(
                 `Harvested ${result.amount} ${result.item} — +${result.xp} XP, +${result.coins} coins`,
                 "success",
@@ -235,6 +270,7 @@ export default function Dashboard({
             const result: GatherResult = res.data;
             setMiningXp((xp) => xp + result.xp);
             setPurse((coins) => coins + result.coins);
+            addToCollections(result.item, result.amount);
             addNotification(
                 `Mined ${result.amount} ${result.item} — +${result.xp} XP, +${result.coins} coins`,
                 "success",
@@ -286,9 +322,10 @@ export default function Dashboard({
             icon: <FarmingIcon />,
             title: "Farming",
             description: "Harvest crops to earn Farming XP and resources.",
-            actionLabel: farmingOnCooldown === true
-                ? `Growing… ${farmingSecondsLeft}s`
-                : "Farm",
+            actionLabel:
+                farmingOnCooldown === true
+                    ? `Growing… ${farmingSecondsLeft}s`
+                    : "Farm",
             accent: "#4a9d4e",
             onAction: handleFarm,
             disabled: farmingOnCooldown,
@@ -297,9 +334,10 @@ export default function Dashboard({
             icon: <MiningIcon />,
             title: "Mining",
             description: "Mine ore to earn Mining XP and resources.",
-            actionLabel: miningOnCooldown === true
-                ? `Mining… ${miningSecondsLeft}s`
-                : "Mine",
+            actionLabel:
+                miningOnCooldown === true
+                    ? `Mining… ${miningSecondsLeft}s`
+                    : "Mine",
             accent: "#4a6fa5",
             onAction: handleMine,
             disabled: miningOnCooldown,
@@ -368,6 +406,23 @@ export default function Dashboard({
                             />
                         ))}
                     </div>
+
+                    <h2 className="dashboard-heading">Collections</h2>
+                    {collections.length === 0 ? (
+                        <p className="collections-empty">
+                            Nothing collected yet. Go farm or mine something.
+                        </p>
+                    ) : (
+                        <div className="collections">
+                            {collections.map((entry) => (
+                                <CollectionCard
+                                    key={entry.item}
+                                    item={entry.item}
+                                    amount={entry.amount}
+                                />
+                            ))}
+                        </div>
+                    )}
                 </main>
             )}
         </div>

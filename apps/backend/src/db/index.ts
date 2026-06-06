@@ -135,6 +135,85 @@ export async function getXp(player_id: number, skill_type: string) {
     }
 }
 
+export async function persistGather(
+    player_id: number,
+    skill_type: string,
+    item_type: string,
+    amount: number,
+    xp: number,
+    coins: number,
+    cooldownUntil: Date,
+) {
+    try {
+        return await db.transaction(async (tx) => {
+            await tx
+                .insert(tables.player_skills)
+                .values({
+                    player_id: player_id,
+                    skill_type: skill_type,
+                    xp: xp,
+                    last_action_at: new Date(),
+                    cooldown_until: cooldownUntil,
+                })
+                .onConflictDoUpdate({
+                    target: [
+                        tables.player_skills.player_id,
+                        tables.player_skills.skill_type,
+                    ],
+                    set: {
+                        xp: sql`${tables.player_skills.xp} + ${xp}`,
+                        last_action_at: new Date(),
+                        cooldown_until: cooldownUntil,
+                    },
+                });
+
+            await tx
+                .insert(tables.player_economy)
+                .values({
+                    player_id: player_id,
+                    coins_purse: coins,
+                    coins_bank: 0,
+                })
+                .onConflictDoUpdate({
+                    target: tables.player_economy.player_id,
+                    set: {
+                        coins_purse: sql`${tables.player_economy.coins_purse} + ${coins}`,
+                    },
+                });
+
+            await tx
+                .insert(tables.player_collections)
+                .values({
+                    player_id: player_id,
+                    item_type: item_type,
+                    amount: amount,
+                })
+                .onConflictDoUpdate({
+                    target: [
+                        tables.player_collections.player_id,
+                        tables.player_collections.item_type,
+                    ],
+                    set: {
+                        amount: sql`${tables.player_collections.amount} + ${amount}`,
+                    },
+                });
+        });
+    } catch (err) {
+        throw err;
+    }
+}
+
+export async function getCollections(player_id: number) {
+    try {
+        return await db
+            .select()
+            .from(tables.player_collections)
+            .where(eq(tables.player_collections.player_id, player_id));
+    } catch (err) {
+        throw err;
+    }
+}
+
 export async function getEconomy(player_id: number) {
     try {
         return await db

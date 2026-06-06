@@ -26,3 +26,8 @@ export type GatherResult = {
     xp: number;
     cooldownMs: number;
 };
+
+export type CollectionEntry = {
+    item: string;
+    amount: number;
+};

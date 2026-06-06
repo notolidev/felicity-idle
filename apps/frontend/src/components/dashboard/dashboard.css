@@ -100,7 +100,8 @@
     font-size: 1.5rem;
 }
 
-.activities + .dashboard-heading {
+.activities + .dashboard-heading,
+.skills + .dashboard-heading {
     margin-top: 2.5rem;
 }
 
@@ -210,4 +211,33 @@
 .skill-xp {
     font-size: 0.875rem;
     color: #555;
+}
+
+.collections {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+}
+
+.collection-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.25rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.collection-name {
+    font-weight: 600;
+}
+
+.collection-amount {
+    font-size: 0.875rem;
+    color: #555;
+}
+
+.collections-empty {
+    color: #888;
 }
