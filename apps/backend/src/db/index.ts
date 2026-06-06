@@ -2,7 +2,7 @@ import { drizzle, NodePgDatabase } from "drizzle-orm/node-postgres";
 import * as schemaTables from "./schema";
 import dotenv from "dotenv";
 import "dotenv/config";
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 
 dotenv.config({ path: "./backend/.env", quiet: true });
 
@@ -83,6 +83,47 @@ export async function deleteSession(hashedRefreshToken: string) {
                 ),
             );
     } catch (err: any) {
+        throw err;
+    }
+}
+
+export async function addXp(
+    player_id: number,
+    skill_type: string,
+    xp: number,
+) {
+    try {
+        return await db
+            .insert(tables.player_skills)
+            .values({
+                player_id: player_id,
+                skill_type: skill_type,
+                xp: xp,
+            })
+            .onConflictDoUpdate({
+                target: [
+                    tables.player_skills.player_id,
+                    tables.player_skills.skill_type,
+                ],
+                set: { xp: sql`${tables.player_skills.xp} + ${xp}` },
+            });
+    } catch (err) {
+        throw err;
+    }
+}
+
+export async function getXp(player_id: number, skill_type: string) {
+    try {
+        return await db
+            .select()
+            .from(tables.player_skills)
+            .where(
+                and(
+                    eq(tables.player_skills.player_id, player_id),
+                    eq(tables.player_skills.skill_type, skill_type),
+                ),
+            );
+    } catch (err) {
         throw err;
     }
 }
