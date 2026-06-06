@@ -1,4 +1,4 @@
-import type { Range, Stats } from "@felicity/shared";
+import type { Range, CombatStats } from "@felicity/shared";
 import { randomIntInRange } from "../utils/randomIntInRage";
 
 export class Enemy {
@@ -18,7 +18,7 @@ export class Enemy {
         this.coinsHeld = randomIntInRange(coinsHeldRange);
     }
 
-    public getStats(): Stats {
+    public getStats(): CombatStats {
         return {
             health: this.maxHealth,
             damageRange: this.damageRange,

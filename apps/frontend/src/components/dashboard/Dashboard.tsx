@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CombatIcon, FarmingIcon, MiningIcon } from "../icons/icons";
 import ActivityCard from "./cards/ActivityCard";
 import CoinsDisplay from "./cards/CoinsDisplay";
 import SkillCard from "./cards/SkillCard";
-import type { CombatResult } from "@felicity/shared";
+import Notification from "./Notification";
+import type { CombatResult, GatherResult } from "@felicity/shared";
 import { combatCooldownMs } from "@felicity/shared";
 import "./dashboard.css";
 import { api } from "../../api";
@@ -13,14 +14,38 @@ interface DashboardTypes {
     detectClick: (buttonType: string) => void;
 }
 
+type NotificationItem = {
+    id: number;
+    message: string;
+    type: "success" | "error";
+};
+
 export default function Dashboard({
     isAuthenticated,
     detectClick,
 }: DashboardTypes) {
     const [combatXp, setCombatXp] = useState(0);
+    const [farmingXp, setFarmingXp] = useState(0);
+    const [miningXp, setMiningXp] = useState(0);
     const [purse, setPurse] = useState(0);
     const [combatCooldown, setCombatCooldown] = useState(false);
-    const [fightOutcome, setFightOutcome] = useState<CombatResult | null>(null);
+    const [farmingCooldownEnd, setFarmingCooldownEnd] = useState<number | null>(
+        null,
+    );
+    const [miningCooldownEnd, setMiningCooldownEnd] = useState<number | null>(
+        null,
+    );
+    const [now, setNow] = useState(() => Date.now());
+    const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+    const nextNotificationId = useRef(0);
+
+    function addNotification(message: string, type: "success" | "error") {
+        const id = nextNotificationId.current++;
+        setNotifications((current) => [...current, { id, message, type }]);
+        setTimeout(() => {
+            setNotifications((current) => current.filter((n) => n.id !== id));
+        }, 4000);
+    }
 
     useEffect(() => {
         if (isAuthenticated !== true) {
@@ -39,6 +64,8 @@ export default function Dashboard({
                     return;
                 }
                 setCombatXp(res.data.combatXp);
+                setFarmingXp(res.data.farmingXp);
+                setMiningXp(res.data.miningXp);
                 setPurse(res.data.purse);
 
                 const remaining = res.data.combatCooldownRemaining;
@@ -47,6 +74,16 @@ export default function Dashboard({
                     cooldownTimeout = setTimeout(() => {
                         setCombatCooldown(false);
                     }, remaining);
+                }
+
+                const farmingRemaining = res.data.farmingCooldownRemaining;
+                if (farmingRemaining > 0) {
+                    setFarmingCooldownEnd(Date.now() + farmingRemaining);
+                }
+
+                const miningRemaining = res.data.miningCooldownRemaining;
+                if (miningRemaining > 0) {
+                    setMiningCooldownEnd(Date.now() + miningRemaining);
                 }
             })
             .catch((err) => {
@@ -58,6 +95,40 @@ export default function Dashboard({
             clearTimeout(cooldownTimeout);
         };
     }, [isAuthenticated]);
+
+    // Tick once a second while a farming cooldown is running, so the
+    // countdown re-renders. Clears itself when the cooldown ends.
+    useEffect(() => {
+        if (farmingCooldownEnd === null) {
+            return;
+        }
+
+        const id = setInterval(() => {
+            const current = Date.now();
+            setNow(current);
+            if (current >= farmingCooldownEnd) {
+                setFarmingCooldownEnd(null);
+            }
+        }, 250);
+
+        return () => clearInterval(id);
+    }, [farmingCooldownEnd]);
+
+    useEffect(() => {
+        if (miningCooldownEnd === null) {
+            return;
+        }
+
+        const id = setInterval(() => {
+            const current = Date.now();
+            setNow(current);
+            if (current >= miningCooldownEnd) {
+                setMiningCooldownEnd(null);
+            }
+        }, 250);
+
+        return () => clearInterval(id);
+    }, [miningCooldownEnd]);
 
     function handleFight() {
         if (combatCooldown === true) {
@@ -76,7 +147,12 @@ export default function Dashboard({
             const result: CombatResult = res.data;
             setCombatXp((xp) => xp + result.xp);
             setPurse((coins) => coins + result.coins);
-            setFightOutcome(result);
+            addNotification(
+                result.result === "win"
+                    ? `Victory! +${result.xp} XP, +${result.coins} coins`
+                    : "Defeat. You came away with nothing",
+                result.result === "win" ? "success" : "error",
+            );
         }
 
         sendCombat()
@@ -90,8 +166,89 @@ export default function Dashboard({
         setCombatCooldown(true);
         setTimeout(() => {
             setCombatCooldown(false);
-            setFightOutcome(null);
         }, combatCooldownMs);
+    }
+
+    // The farming cooldown is random and rolled server-side, so unlike combat
+    // we only know its length once the response comes back.
+    const farmingRemainingMs =
+        farmingCooldownEnd !== null ? farmingCooldownEnd - now : 0;
+    const farmingOnCooldown = farmingRemainingMs > 0;
+    const farmingSecondsLeft = farmingOnCooldown
+        ? (farmingRemainingMs - (farmingRemainingMs % 1000)) / 1000
+        : 0;
+
+    function handleFarm() {
+        if (farmingOnCooldown === true) {
+            return;
+        }
+
+        function sendFarm() {
+            return api({
+                method: "POST",
+                url: "/skill/farming",
+                data: {},
+            });
+        }
+
+        function applyResult(res: any) {
+            const result: GatherResult = res.data;
+            setFarmingXp((xp) => xp + result.xp);
+            setPurse((coins) => coins + result.coins);
+            addNotification(
+                `Harvested ${result.amount} ${result.item} — +${result.xp} XP, +${result.coins} coins`,
+                "success",
+            );
+            setFarmingCooldownEnd(Date.now() + result.cooldownMs);
+        }
+
+        sendFarm()
+            .then((res) => {
+                applyResult(res);
+            })
+            .catch((err) => {
+                console.log(err);
+            });
+    }
+
+    const miningRemainingMs =
+        miningCooldownEnd !== null ? miningCooldownEnd - now : 0;
+    const miningOnCooldown = miningRemainingMs > 0;
+    const miningSecondsLeft = miningOnCooldown
+        ? (miningRemainingMs - (miningRemainingMs % 1000)) / 1000
+        : 0;
+
+    function handleMine() {
+        if (miningOnCooldown === true) {
+            return;
+        }
+
+        function sendMine() {
+            return api({
+                method: "POST",
+                url: "/skill/mining",
+                data: {},
+            });
+        }
+
+        function applyResult(res: any) {
+            const result: GatherResult = res.data;
+            setMiningXp((xp) => xp + result.xp);
+            setPurse((coins) => coins + result.coins);
+            addNotification(
+                `Mined ${result.amount} ${result.item} — +${result.xp} XP, +${result.coins} coins`,
+                "success",
+            );
+            setMiningCooldownEnd(Date.now() + result.cooldownMs);
+        }
+
+        sendMine()
+            .then((res) => {
+                applyResult(res);
+            })
+            .catch((err) => {
+                console.log(err);
+            });
     }
 
     const skills = [
@@ -101,8 +258,18 @@ export default function Dashboard({
             xp: combatXp,
             accent: "#c0392b",
         },
-        { icon: <FarmingIcon />, name: "Farming", xp: 0, accent: "#4a9d4e" },
-        { icon: <MiningIcon />, name: "Mining", xp: 0, accent: "#4a6fa5" },
+        {
+            icon: <FarmingIcon />,
+            name: "Farming",
+            xp: farmingXp,
+            accent: "#4a9d4e",
+        },
+        {
+            icon: <MiningIcon />,
+            name: "Mining",
+            xp: miningXp,
+            accent: "#4a6fa5",
+        },
     ];
 
     const activities = [
@@ -119,19 +286,23 @@ export default function Dashboard({
             icon: <FarmingIcon />,
             title: "Farming",
             description: "Harvest crops to earn Farming XP and resources.",
-            actionLabel: "Farm",
+            actionLabel: farmingOnCooldown === true
+                ? `Growing… ${farmingSecondsLeft}s`
+                : "Farm",
             accent: "#4a9d4e",
-            onAction: () => {},
-            disabled: false,
+            onAction: handleFarm,
+            disabled: farmingOnCooldown,
         },
         {
             icon: <MiningIcon />,
             title: "Mining",
             description: "Mine ore to earn Mining XP and resources.",
-            actionLabel: "Mine",
+            actionLabel: miningOnCooldown === true
+                ? `Mining… ${miningSecondsLeft}s`
+                : "Mine",
             accent: "#4a6fa5",
-            onAction: () => {},
-            disabled: false,
+            onAction: handleMine,
+            disabled: miningOnCooldown,
         },
     ];
 
@@ -157,19 +328,15 @@ export default function Dashboard({
                 </div>
             </nav>
 
-            {fightOutcome !== null && (
-                <div
-                    className={
-                        fightOutcome.result === "win"
-                            ? "combat-toast combat-toast-win"
-                            : "combat-toast combat-toast-loss"
-                    }
-                >
-                    {fightOutcome.result === "win"
-                        ? `Victory! +${fightOutcome.xp} XP, +${fightOutcome.coins} coins`
-                        : "Defeat. You came away with nothing"}
-                </div>
-            )}
+            <div className="notifications">
+                {notifications.map((n) => (
+                    <Notification
+                        key={n.id}
+                        message={n.message}
+                        type={n.type}
+                    />
+                ))}
+            </div>
 
             {isAuthenticated === true && (
                 <main className="dashboard-main">
