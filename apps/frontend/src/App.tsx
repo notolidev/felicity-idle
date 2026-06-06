@@ -114,6 +114,7 @@ export default function App() {
                         setMessage(res.data);
                         setUsername("");
                         setPassword("");
+                        setIsAuthenticated(true);
 
                         navigate("/");
                     })

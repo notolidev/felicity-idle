@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router";
+
 type SignInProps = {
     username: string;
     password: string;
@@ -13,6 +15,8 @@ export default function SignIn({
     setPassword,
     onSubmit,
 }: SignInProps) {
+    const navigate = useNavigate();
+
     return (
         <div className="auth-card">
             <h2>Sign In</h2>
@@ -41,6 +45,14 @@ export default function SignIn({
             <button type="button" onClick={onSubmit}>
                 Sign In
             </button>
+            <div className="auth-card-nav">
+                <button type="button" onClick={() => navigate("/")}>
+                    Back
+                </button>
+                <button type="button" onClick={() => navigate("/signup")}>
+                    Switch to Sign Up
+                </button>
+            </div>
         </div>
     );
 }

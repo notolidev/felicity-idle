@@ -1,5 +1,6 @@
 import cookieParser from "cookie-parser";
 import * as auth from "./routes/auth";
+import * as skill from "./routes/skill";
 import express from "express";
 import cors from "cors";
 import authenticateUser from "./middleware/auth";
@@ -14,6 +15,7 @@ app.use(cookieParser());
 // app.use(authenticateUser);
 
 app.use("/auth", auth.router);
+app.use("/skill", skill.router);
 
 app.get("/", (req: express.Request, res: express.Response) => {
     res.send("Hello World!");

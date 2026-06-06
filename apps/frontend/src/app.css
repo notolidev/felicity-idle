@@ -21,3 +21,12 @@
     flex-direction: column;
     gap: 0.25rem;
 }
+
+.auth-card-nav {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.auth-card-nav button {
+    flex: 1;
+}

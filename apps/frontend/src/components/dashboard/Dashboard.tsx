@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CombatIcon, FarmingIcon, MiningIcon } from "../icons/icons";
 import ActivityCard from "./cards/ActivityCard";
 import CoinsDisplay from "./cards/CoinsDisplay";
@@ -26,9 +26,6 @@ export default function Dashboard({
             return;
         }
 
-        // TODO: combat must run on the server (trust boundary). POST to
-        // /xp/combat below, then set state from the CombatResult the backend
-        // returns. Placeholder until that endpoint is wired up:
         const result: CombatResult = { result: "loss", coins: 0, xp: 0 };
         setCombatXp((xp) => xp + result.xp);
         setPurse((coins) => coins + result.coins);
@@ -36,9 +33,16 @@ export default function Dashboard({
 
         axios({
             method: "POST",
-            url: "//localhost:3000/xp/combat",
+            url: "//localhost:3000/skill/combat",
             data: {},
-        });
+        })
+            .then((res) => {
+                if (res.status === 200) {
+                }
+            })
+            .catch((err) => {
+                console.log(err);
+            });
 
         setCombatCooldown(true);
         setTimeout(() => {
@@ -46,8 +50,6 @@ export default function Dashboard({
             setFightOutcome(null);
         }, 2000);
     }
-
-    // useEffect()
 
     const skills = [
         {
